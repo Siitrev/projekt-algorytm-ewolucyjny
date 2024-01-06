@@ -30,12 +30,26 @@ class Person:
     def __str__(self) -> str:
         return str(self.chromosome.genome)
 
+    def __repr__(self) -> str:
+        return str(self)
+
 
 class Population:
-    best_people = []
-
     def __init__(self, size: int, chromosome_info: ChromosomeInfo) -> None:
         self.people = [Person(chromosome_info) for _ in range(size)]
+        self.best_people = []
+        
+    def set_best_people(self, amount : int = 1, asc = True):
+        self.best_people = []
+        temp = sorted(self.people, reverse=asc, key=lambda x: x.chromosome.to_number())
+        for person in temp [:amount]:
+            self.best_people.append(person)
+    
+    def add_people(self, *people):
+        pass
+    
+    def remove_people(self):
+        pass
 
 
 class Experiment:
