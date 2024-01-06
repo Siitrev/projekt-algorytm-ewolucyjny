@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Callable
 
 
 class ChromosomeInfo:
@@ -21,6 +22,12 @@ class Chromosome:
     def to_number(self) -> float:
         addent = int(self.genome, 2) * (self.__end - self.__start) / (np.power(2, self.m) - 1)
         return self.__start + addent
+    
+    def set(self, chromosome : str):
+        self.genome = chromosome
+    
+    def get(self) -> str:
+        return self.genome
 
 
 class Person:
@@ -39,39 +46,47 @@ class Population:
         self.people = [Person(chromosome_info) for _ in range(size)]
         self.best_people = []
         
-    def set_best_people(self, amount : int = 1, asc = True):
+    def set_best_people(self, amount : int = 1, ascending = True):
         self.best_people = []
-        temp = sorted(self.people, reverse=asc, key=lambda x: x.chromosome.to_number())
+        temp = sorted(self.people, reverse=ascending, key=lambda x: x.chromosome.to_number())
         for person in temp [:amount]:
             self.best_people.append(person)
     
     def add_people(self, *people):
-        pass
+        self.people += people
     
-    def remove_people(self):
-        pass
+    def remove_people(self, amount = 1):
+        for _ in range(amount):
+            index = np.random.randint(0,len(self.people))
+            self.people.pop(index)
+            
+    # def __str__(self) -> str:
+    #     return str(self.people)
+    
+    def __repr__(self) -> str:
+        temp = [x.chromosome.to_number() for x in self.people]
+        return str(temp)
 
 
 class Experiment:
-    def __init__(self) -> None:
+    def __init__(self, size: int, chromosome_info : ChromosomeInfo) -> None:
+        self.population = Population(size, chromosome_info)
+        self.chromosome_info = chromosome_info
+
+    def mutate(self, mutation : Callable, probability = 0.3):
+        for index, person in enumerate(self.population.people):
+            chance = np.random.rand()
+            if chance <= probability:
+                new_chromosome = mutation(person.chromosome.get())
+                self.population.people[index].chromosome.set(new_chromosome)
+
+    def inverse(self, inversion : Callable, probability = 0.1):
+        for index, person in enumerate(self.population.people):
+            chance = np.random.rand()
+            if chance <= probability:
+                new_chromosome =inversion(person.chromosome.get())
+                self.population.people[index].chromosome.set(new_chromosome)
+
+    def cross(self, crossing : Callable, probability = 0.8):
         pass
 
-    def mutate(self, mutation):
-        pass
-
-    def inverse(self, inversion):
-        pass
-
-    def cross(self, crossing):
-        pass
-# mut = Mutation(n = 1)
-# Experiment.mutate(mut)      
-# for i in range(20):
-#     Experiment.setBest()
-#     Experiment.cross()
-#     Experiment.mutate()
-#     Experiment.inverse()
-#     Experiment.nextEpoch()
-# best = pop1.getBest()
-# pop2 = Population(213- len(best))
-# pop2.addPeople(best)
