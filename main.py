@@ -1,6 +1,8 @@
 from core.template.template import *
+from gui.MainWindow import MainWindow
+from PyQt6.QtWidgets import QApplication
 import benchmark_functions as bf
-import pprint as pp
+import sys
 
 
 def fun(x):
@@ -15,6 +17,12 @@ print(pop)
 for index, person in enumerate(pop.people):
     person.chromosome.set("0011111100101010101010001")
 print(pop)
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    main_window = MainWindow()
+    main_window.show()
+    sys.exit(app.exec())
 # mut = Mutation(n = 1)
 # Experiment.mutate(mut)
 # for i in range(20):
