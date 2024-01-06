@@ -12,5 +12,3 @@ def inversion(chromosome : str) -> str:
         anaphase[i] = invert[anaphase[i]]
 
     return ''.join(anaphase)
-
-print(inversion("00110101010"))
