@@ -7,6 +7,7 @@ def fun(x):
 fitness_function = bf.Michalewicz()
 
 info = ChromosomeInfo(-10,10,6)
-pop = Population(200,info)
-[print(x) for x in pop.people]
-print(fitness_function([2.202906,1.570796]))
+pop = Population(50,info)
+pop.set_best_people(2)
+for person in pop.best_people:
+    print(person.chromosome.to_number())
