@@ -1,5 +1,7 @@
 import numpy as np
 from typing import Callable
+import benchmark_functions as bf
+
 
 
 class ChromosomeInfo:
@@ -38,10 +40,14 @@ class Chromosome:
 
 class Person:
     def __init__(self, chromosome_info: ChromosomeInfo) -> None:
-        self.chromosome = Chromosome(chromosome_info)
+        self.fitness_function = bf.Michalewicz()
+        self.chromosomes = (Chromosome(chromosome_info), Chromosome(chromosome_info))
+        first_chromosome = self.chromosomes[0].to_number()
+        second_chromosome = self.chromosomes[1].to_number()
+        self.value = self.fitness_function([first_chromosome,second_chromosome])
 
     def __str__(self) -> str:
-        return str(self.chromosome.genome)
+        return str(tuple([x.to_number() for x in self.chromosomes]) + (self.value,))
 
     def __repr__(self) -> str:
         return str(self)
@@ -52,10 +58,10 @@ class Population:
         self.people = [Person(chromosome_info) for _ in range(size)]
         self.best_people = []
 
-    def set_best_people(self, amount: int = 1, ascending=True):
+    def set_best_people(self, amount: int = 1, descending=False):
         self.best_people = []
         temp = sorted(
-            self.people, reverse=ascending, key=lambda x: x.chromosome.to_number()
+            self.people, reverse=descending, key=lambda x: x.value
         )
         for person in temp[:amount]:
             self.best_people.append(person)
@@ -72,8 +78,8 @@ class Population:
     #     return str(self.people)
 
     def __repr__(self) -> str:
-        temp = [x.chromosome.to_number() for x in self.people]
-        return str(temp)
+        temp = [tuple([y.to_number() for y in x.chromosomes] + [x.value]) for x in self.people]
+        return str(temp).replace("),",")\n")
 
 
 class Experiment:
@@ -98,3 +104,6 @@ class Experiment:
 
     def cross(self, crossing: Callable, probability=0.8):
         pass
+    
+    def selection(self, select_method: Callable, percentage : float, descending = False):
+        return select_method(self.population, percentage, descending)
