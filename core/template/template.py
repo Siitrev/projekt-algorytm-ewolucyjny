@@ -23,7 +23,7 @@ class Chromosome:
         addent = int(self.genome, 2) * (self.__end - self.__start) / (np.power(2, self.m) - 1)
         return self.__start + addent
     
-    def set(self, chromosome : str):
+    def set(self, chromosome: str):
         self.genome = chromosome
     
     def get(self) -> str:
