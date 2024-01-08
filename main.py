@@ -7,18 +7,18 @@ import sys
 
 fitness_function = bf.Michalewicz()
 
-info = ChromosomeInfo(-10, 10, 6)
+info = ChromosomeInfo(-30, 30, 6)
 pop = Population(10, info)
 print(pop, "\n")
 strategies = Strategy()
-sample = strategies.tournament_selection(pop,5,amount_of_contestants=3, maximization=True)
+sample = strategies.roulette_wheel(pop,5)
 print(str(sample).replace("),",")\n"))
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    main_window = MainWindow()
-    main_window.show()
-    sys.exit(app.exec())
+# if __name__ == "__main__":
+#     app = QApplication(sys.argv)
+#     main_window = MainWindow()
+#     main_window.show()
+#     sys.exit(app.exec())
 # mut = Mutation(n = 1)
 # Experiment.mutate(mut)
 # for i in range(20):
