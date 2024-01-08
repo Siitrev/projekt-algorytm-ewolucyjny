@@ -19,6 +19,7 @@ class Chromosome:
             np.log2((self.__end - self.__start) * np.power(10, self.__precision))
             + np.log2(1)
         )
+        self.m = int(self.m)
         self.randoms = [np.random.randint(0, 2) for _ in range(int(self.m))]
         self.genome = "".join([str(bit) for bit in self.randoms])
 
@@ -46,7 +47,7 @@ class Person:
         self.chromosomes = (Chromosome(chromosome_info), Chromosome(chromosome_info))
         first_chromosome = self.chromosomes[0].to_number()
         second_chromosome = self.chromosomes[1].to_number()
-        self.value = self.fitness_function([first_chromosome, second_chromosome])
+        self.value = np.round(self.fitness_function([first_chromosome, second_chromosome]),self.chromosomes[0].m + 1)
 
     def __str__(self) -> str:
         return str(
@@ -100,19 +101,27 @@ class Experiment:
             chance = np.random.rand()
 
             if chance <= probability:
-                new_chromosome = mutation(person.chromosome.get())
-                self.population.people[index].chromosome.set(new_chromosome)
+                new_chromosome_1 = mutation(person.chromosomes[0])
+                new_chromosome_2 = mutation(person.chromosomes[1])
+                
+                self.population.people[index].chromosomes[0].set(new_chromosome_1)
+                self.population.people[index].chromosomes[0].set(new_chromosome_2)
 
     def inverse(self, inversion: Callable, probability=0.1):
         for index, person in enumerate(self.population.people):
             chance = np.random.rand()
 
             if chance <= probability:
-                new_chromosome = inversion(person.chromosome.get())
-                self.population.people[index].chromosome.set(new_chromosome)
+                new_chromosome_1 = inversion(person.chromosomes[0].get())
+                new_chromosome_2 = inversion(person.chromosomes[1].get())
+                
+                self.population.people[index].chromosomes[0].set(new_chromosome_1)
+                self.population.people[index].chromosomes[0].set(new_chromosome_2)
 
     def cross(self, crossing: Callable, probability=0.8):
         pass
 
-    def selection(self, select_method: Callable, percentage: float, descending=False):
-        return select_method(self.population, percentage, descending)
+    def selection(self, select_method: Callable, amount: float, maximization=False, **kwargs):
+        if "contestants" in kwargs:
+            return select_method(self.population, amount=amount, maximization=maximization, number_of_contestants = kwargs["contestants"])
+        return select_method(self.population, amount=amount, maximization=maximization)
