@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Callable
+import benchmark_functions as bf
 
 
 class ChromosomeInfo:
@@ -19,7 +20,7 @@ class Chromosome:
             + np.log2(1)
         )
         self.randoms = [np.random.randint(0, 2) for _ in range(int(self.m))]
-        self.genome = "".join([str(x) for x in self.randoms])
+        self.genome = "".join([str(bit) for bit in self.randoms])
 
     def to_number(self) -> float:
         addent = (
