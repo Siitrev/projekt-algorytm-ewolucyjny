@@ -1,6 +1,7 @@
 from core.template.template import *
 from core.strategies.strategies import *
 from core.mutations.mutation import mutation
+
 from gui.MainWindow import MainWindow
 from PyQt6.QtWidgets import QApplication
 import benchmark_functions as bf
@@ -26,7 +27,6 @@ if __name__ == "__main__":
     main_window = MainWindow()
     main_window.show()
     sys.exit(app.exec())
-
 # mut = Mutation(n = 1)
 # Experiment.mutate(mut)
 # for i in range(20):

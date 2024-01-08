@@ -62,6 +62,10 @@ class Person:
         return str(self)
 
 
+    def __repr__(self) -> str:
+        return str(self)
+
+
 class Population:
     def __init__(self, size: int, chromosome_info: ChromosomeInfo) -> None:
         self.people = [Person(chromosome_info) for _ in range(size)]
@@ -149,3 +153,4 @@ class Experiment:
         if maximization:
             return max(self.population.people, key=lambda person: person.value)
         return min(self.population.people, key=lambda person: person.value)
+
