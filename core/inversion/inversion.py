@@ -3,12 +3,11 @@ import numpy as np
 
 
 def inversion(chromosome : str) -> str:
-    invert = {'0':'1', '1':'0'}
-    inversion_points = np.random.randint(low=0, high=len(chromosome)+1, size=2)
-    print(inversion_points)
-
+    inversion_points = sorted(np.random.randint(low=0, high=len(chromosome)+1, size=2))
     anaphase = [*chromosome]
-    for i in range(*sorted(inversion_points)):
-        anaphase[i] = invert[anaphase[i]]
+    while inversion_points[1] > inversion_points[0]:
+        anaphase[inversion_points[0]], anaphase[inversion_points[1]] = anaphase[inversion_points[1]], anaphase[inversion_points[0]]
+        inversion_points[0] += 1
+        inversion_points[1] -= 1
 
     return ''.join(anaphase)
