@@ -42,10 +42,10 @@ def roulette_wheel(
         )
         probability = tuple(
             enumerate(
-            [
-                (person.value + minimum_value + 0.1) / sum_of_fitness
-                for person in population.people
-            ]
+                [
+                    (person.value + minimum_value + 0.1) / sum_of_fitness
+                    for person in population.people
+                ]
             )
         )
     else:
@@ -54,10 +54,10 @@ def roulette_wheel(
         )
         probability = tuple(
             enumerate(
-            [
-                (1 / (person.value + minimum_value + 0.1)) / sum_of_fitness
-                for person in population.people
-            ]
+                [
+                    (1 / (person.value + minimum_value + 0.1)) / sum_of_fitness
+                    for person in population.people
+                ]
             )
         )
     sample = []

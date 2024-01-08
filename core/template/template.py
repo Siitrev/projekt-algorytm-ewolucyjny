@@ -30,13 +30,13 @@ class Chromosome:
             / (np.power(2, self.m) - 1)
         )
         return self.__start + addent
-      
+
     def set(self, chromosome: str):
         self.genome = chromosome
 
     def get(self) -> str:
         return self.genome
-    
+
     def __str__(self) -> str:
         return self.genome
 
@@ -47,7 +47,10 @@ class Person:
         self.chromosomes = (Chromosome(chromosome_info), Chromosome(chromosome_info))
         first_chromosome = self.chromosomes[0].to_number()
         second_chromosome = self.chromosomes[1].to_number()
-        self.value = np.round(self.fitness_function([first_chromosome, second_chromosome]),self.chromosomes[0].m + 1)
+        self.value = np.round(
+            self.fitness_function([first_chromosome, second_chromosome]),
+            self.chromosomes[0].m + 1,
+        )
 
     def __str__(self) -> str:
         return str(
@@ -64,11 +67,12 @@ class Population:
         self.people = [Person(chromosome_info) for _ in range(size)]
         self.best_people = []
 
-    def set_best_people(self, amount: int = 1, descending=False):
-        self.best_people = []
-        temp = sorted(self.people, reverse=descending, key=lambda x: x.value)
+    def get_best_people(self, amount: int = 1, maximization: bool = False):
+        best_people = []
+        temp = sorted(self.people, reverse=maximization, key=lambda x: x.value)
         for person in temp[:amount]:
-            self.best_people.append(person)
+            best_people.append(person)
+        return best_people
 
     def add_people(self, *people):
         self.people += people
@@ -77,9 +81,6 @@ class Population:
         for _ in range(amount):
             index = np.random.randint(0, len(self.people))
             self.people.pop(index)
-
-    # def __str__(self) -> str:
-    #     return str(self.people)
 
     def __repr__(self) -> str:
         temp = [
@@ -95,33 +96,56 @@ class Population:
 class Experiment:
     def __init__(self, size: int, chromosome_info: ChromosomeInfo) -> None:
         self.population = Population(size, chromosome_info)
+        self.best_people = []
 
-    def mutate(self, mutation: Callable, probability=0.3):
+    def mutate(self, mutation: Callable, probability: float = 0.3):
         for index, person in enumerate(self.population.people):
             chance = np.random.rand()
 
             if chance <= probability:
                 new_chromosome_1 = mutation(person.chromosomes[0])
                 new_chromosome_2 = mutation(person.chromosomes[1])
-                
+
                 self.population.people[index].chromosomes[0].set(new_chromosome_1)
                 self.population.people[index].chromosomes[0].set(new_chromosome_2)
 
-    def inverse(self, inversion: Callable, probability=0.1):
+    def inverse(self, inversion: Callable, probability: float = 0.1):
         for index, person in enumerate(self.population.people):
             chance = np.random.rand()
 
             if chance <= probability:
                 new_chromosome_1 = inversion(person.chromosomes[0].get())
                 new_chromosome_2 = inversion(person.chromosomes[1].get())
-                
+
                 self.population.people[index].chromosomes[0].set(new_chromosome_1)
                 self.population.people[index].chromosomes[0].set(new_chromosome_2)
 
     def cross(self, crossing: Callable, probability=0.8):
         pass
 
-    def selection(self, select_method: Callable, amount: float, maximization=False, **kwargs):
+    def selection(
+        self,
+        select_method: Callable,
+        amount: float,
+        maximization: bool = False,
+        **kwargs
+    ):
         if "contestants" in kwargs:
-            return select_method(self.population, amount=amount, maximization=maximization, number_of_contestants = kwargs["contestants"])
-        return select_method(self.population, amount=amount, maximization=maximization)
+            self.population_for_generation = select_method(
+                self.population,
+                amount=amount,
+                maximization=maximization,
+                number_of_contestants=kwargs["contestants"],
+            )
+        else:
+            self.population_for_generation = select_method(
+                self.population, amount=amount, maximization=maximization
+            )
+
+    def save_best_people(self, amount: int = 1, maximization: bool = False):
+        self.best_people = self.population.get_best_people(amount, maximization)
+
+    def get_result(self, maximization: bool = False) -> Person:
+        if maximization:
+            return max(self.population.people, key=lambda person: person.value)
+        return min(self.population.people, key=lambda person: person.value)
