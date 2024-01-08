@@ -27,29 +27,29 @@ def twoPointCrossing(genome1 : str, genome2: str):
     return (new_genome1, new_genome2)
     
 
-def homogeneousCrossing(genome1 : str, genome2: str, probabilityOfCrossing : int):
+def homogeneousCrossing(genome1 : str, genome2: str, probability_of_crossing : int):
 
-    newGenome1 = ""
-    newGenome2 = ""
-    randomNumbers = []
+    new_genome1 = ""
+    new_genome2 = ""
+    random_numbers = []
 
     for x in range(int(len(genome1)/2)):
-        randomNumbers.append(np.random.randint(0,100))
+        random_numbers.append(np.random.randint(0,100))
     
-    randomNumbersCounter = 0
+    random_numbers_counter = 0
 
     for x in range(len(genome1)):
 
         if x % 2 == 1:
-            if (randomNumbers[randomNumbersCounter] < probabilityOfCrossing ):
-                newGenome1 += genome2[x]
-                newGenome2 += genome1[x]
-                randomNumbersCounter += 1
+            if (random_numbers[random_numbers_counter] < probability_of_crossing ):
+                new_genome1 += genome2[x]
+                new_genome2 += genome1[x]
+                random_numbers_counter += 1
             else:
-                newGenome1 += genome1[x]
-                newGenome2 += genome2[x]
+                new_genome1 += genome1[x]
+                new_genome2 += genome2[x]
         if x % 2 == 0:
-            newGenome1 += genome1[x]
-            newGenome2 += genome2[x]
+            new_genome1 += genome1[x]
+            new_genome2 += genome2[x]
 
-    return (newGenome1, newGenome2)
+    return (new_genome1, new_genome2)

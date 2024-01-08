@@ -1,4 +1,6 @@
 import numpy as np
+from typing import Callable
+import benchmark_functions as bf
 
 
 class ChromosomeInfo:
@@ -12,52 +14,168 @@ class Chromosome:
     def __init__(self, chromosome_info: ChromosomeInfo) -> None:
         self.__end = chromosome_info.end
         self.__start = chromosome_info.start
-        self.__precision = chromosome_info.precision
-        self.m = np.ceil(np.log2((self.__end - self.__start) * \
-                                 np.power(10, self.__precision)) + np.log2(1))
+        self.__precision = np.int64(chromosome_info.precision)
+        self.m = np.ceil(
+            np.log2((self.__end - self.__start) * np.power(10, self.__precision))
+            + np.log2(1)
+        )
+        self.m = np.int64(self.m)
         self.randoms = [np.random.randint(0, 2) for _ in range(int(self.m))]
-        self.genome = "".join([str(x) for x in self.randoms])
+        self.genome = "".join([str(bit) for bit in self.randoms])
 
     def to_number(self) -> float:
-        addent = int(self.genome, 2) * (self.__end - self.__start) / (np.power(2, self.m) - 1)
+        addent = (
+            int(self.genome, 2)
+            * (self.__end - self.__start)
+            / (np.power(2, self.m) - 1)
+        )
         return self.__start + addent
+
+    def set(self, chromosome: str):
+        self.genome = chromosome
+
+    def get(self) -> str:
+        return self.genome
+
+    def __str__(self) -> str:
+        return self.genome
 
 
 class Person:
     def __init__(self, chromosome_info: ChromosomeInfo) -> None:
-        self.chromosome = Chromosome(chromosome_info)
+        self.fitness_function = bf.Michalewicz()
+        self.chromosomes = (Chromosome(chromosome_info), Chromosome(chromosome_info))
+        first_chromosome = self.chromosomes[0].to_number()
+        second_chromosome = self.chromosomes[1].to_number()
+        self.value = self.fitness_function([first_chromosome, second_chromosome])
 
     def __str__(self) -> str:
-        return str(self.chromosome.genome)
+        return str(
+            tuple([chromosome.to_number() for chromosome in self.chromosomes])
+            + (self.value,)
+        )
+
+    def __repr__(self) -> str:
+        return str(self)
+
 
 
 class Population:
-    best_people = []
-
     def __init__(self, size: int, chromosome_info: ChromosomeInfo) -> None:
         self.people = [Person(chromosome_info) for _ in range(size)]
+        self.best_people = []
+
+    def get_best_people(self, amount: int = 1, maximization: bool = False):
+        best_people = []
+        temp = sorted(self.people, reverse=maximization, key=lambda x: x.value)
+        for person in temp[:amount]:
+            best_people.append(person)
+        return best_people
+
+    def add_people(self, people):
+        for person in people:
+            self.people.append(person)
+
+    def remove_people(self, amount=1):
+        for _ in range(amount):
+            index = np.random.randint(0, len(self.people))
+            self.people.pop(index)
+
+    def __repr__(self) -> str:
+        temp = [
+            tuple(
+                [chromosome.to_number() for chromosome in person.chromosomes]
+                + [person.value]
+            )
+            for person in self.people
+        ]
+        return str(temp).replace("),", ")\n")
 
 
 class Experiment:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, size: int, chromosome_info: ChromosomeInfo) -> None:
+        self.population = Population(size, chromosome_info)
+        self.chromosome_info = chromosome_info
+        self.best_people = []
 
-    def mutate(self, mutation):
-        pass
+    def mutate(self, mutation: Callable, probability: float = 0.3, points : int = 1):
+        
+        for index, person in enumerate(self.population.people):
+            chance = np.random.rand()
+            
+            if chance <= probability:
+                new_chromosome_1 = mutation(person.chromosomes[0], points)
+                new_chromosome_2 = mutation(person.chromosomes[1], points)
 
-    def inverse(self, inversion):
-        pass
+                self.population.people[index].chromosomes[0].set(new_chromosome_1)
+                self.population.people[index].chromosomes[0].set(new_chromosome_2)
 
-    def cross(self, crossing):
-        pass
-# mut = Mutation(n = 1)
-# Experiment.mutate(mut)      
-# for i in range(20):
-#     Experiment.setBest()
-#     Experiment.cross()
-#     Experiment.mutate()
-#     Experiment.inverse()
-#     Experiment.nextEpoch()
-# best = pop1.getBest()
-# pop2 = Population(213- len(best))
-# pop2.addPeople(best)
+    def inverse(self, inversion: Callable, probability: float = 0.1):
+        for index, person in enumerate(self.population.people):
+            chance = np.random.rand()
+
+            if chance <= probability:
+                new_chromosome_1 = inversion(person.chromosomes[0].get())
+                new_chromosome_2 = inversion(person.chromosomes[1].get())
+
+                self.population.people[index].chromosomes[0].set(new_chromosome_1)
+                self.population.people[index].chromosomes[0].set(new_chromosome_2)
+
+    def cross(self, crossing: Callable,  probability : float = 0.8):
+        population_len = len(self.population.people)
+        target_population = population_len - len(self.best_people)
+        crossing_len = len(self.people_for_crossing)
+        counter = 0
+        
+        while counter < target_population:
+            chance = np.random.rand()
+            index_1 = np.random.randint(0, crossing_len)
+            index_2 = np.random.randint(0, crossing_len)
+            
+            if chance <= probability:
+                chromosome_1_x = self.people_for_crossing[index_1].chromosomes[0].get()
+                chromosome_1_y = self.people_for_crossing[index_1].chromosomes[1].get()
+
+                chromosome_2_x = self.people_for_crossing[index_2].chromosomes[0].get()
+                chromosome_2_y = self.people_for_crossing[index_2].chromosomes[1].get()
+                
+                new_chromosomes_x = crossing(chromosome_1_x, chromosome_2_x)
+                new_chromosomes_y = crossing(chromosome_1_y, chromosome_2_y)
+                
+                self.population.people[counter].chromosomes[0].set(new_chromosomes_x[0])
+                self.population.people[counter].chromosomes[0].set(new_chromosomes_y[0])
+                counter += 1
+                
+                self.population.people[counter].chromosomes[1].set(new_chromosomes_x[1])
+                self.population.people[counter].chromosomes[1].set(new_chromosomes_y[1])
+                counter += 1
+        self.population.people = self.population.people[:target_population]
+        self.population.add_people(self.best_people)
+
+    def selection(
+        self,
+        select_method: Callable,
+        amount: float,
+        maximization: bool = False,
+        **kwargs
+    ):
+        if "contestants" in kwargs:
+            self.people_for_crossing = select_method(
+                self.population,
+                amount=amount,
+                maximization=maximization,
+                number_of_contestants=kwargs["contestants"],
+            )
+        else:
+            self.people_for_crossing = select_method(
+                self.population, amount=amount, maximization=maximization
+            )
+
+    def save_best_people(self, amount: int = 1, maximization: bool = False):
+        self.best_people = self.population.get_best_people(amount, maximization)
+
+    def get_result(self, maximization: bool = False) -> Person:
+        if maximization:
+            return max(self.population.people, key=lambda person: person.value)
+        return min(self.population.people, key=lambda person: person.value)
+
