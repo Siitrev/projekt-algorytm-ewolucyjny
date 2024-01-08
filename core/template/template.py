@@ -28,7 +28,7 @@ class Chromosome:
             / (np.power(2, self.m) - 1)
         )
         return self.__start + addent
-
+      
     def set(self, chromosome: str):
         self.genome = chromosome
 
@@ -38,10 +38,17 @@ class Chromosome:
 
 class Person:
     def __init__(self, chromosome_info: ChromosomeInfo) -> None:
-        self.chromosome = Chromosome(chromosome_info)
+        self.fitness_function = bf.Michalewicz()
+        self.chromosomes = (Chromosome(chromosome_info), Chromosome(chromosome_info))
+        first_chromosome = self.chromosomes[0].to_number()
+        second_chromosome = self.chromosomes[1].to_number()
+        self.value = self.fitness_function([first_chromosome, second_chromosome])
 
     def __str__(self) -> str:
-        return str(self.chromosome.genome)
+        return str(
+            tuple([chromosome.to_number() for chromosome in self.chromosomes])
+            + (self.value,)
+        )
 
     def __repr__(self) -> str:
         return str(self)
@@ -52,11 +59,9 @@ class Population:
         self.people = [Person(chromosome_info) for _ in range(size)]
         self.best_people = []
 
-    def set_best_people(self, amount: int = 1, ascending=True):
+    def set_best_people(self, amount: int = 1, descending=False):
         self.best_people = []
-        temp = sorted(
-            self.people, reverse=ascending, key=lambda x: x.chromosome.to_number()
-        )
+        temp = sorted(self.people, reverse=descending, key=lambda x: x.value)
         for person in temp[:amount]:
             self.best_people.append(person)
 
@@ -72,8 +77,14 @@ class Population:
     #     return str(self.people)
 
     def __repr__(self) -> str:
-        temp = [x.chromosome.to_number() for x in self.people]
-        return str(temp)
+        temp = [
+            tuple(
+                [chromosome.to_number() for chromosome in person.chromosomes]
+                + [person.value]
+            )
+            for person in self.people
+        ]
+        return str(temp).replace("),", ")\n")
 
 
 class Experiment:
@@ -83,7 +94,7 @@ class Experiment:
     def mutate(self, mutation: Callable, probability=0.3):
         for index, person in enumerate(self.population.people):
             chance = np.random.rand()
-            
+
             if chance <= probability:
                 new_chromosome = mutation(person.chromosome.get())
                 self.population.people[index].chromosome.set(new_chromosome)
@@ -91,10 +102,13 @@ class Experiment:
     def inverse(self, inversion: Callable, probability=0.1):
         for index, person in enumerate(self.population.people):
             chance = np.random.rand()
-            
+
             if chance <= probability:
                 new_chromosome = inversion(person.chromosome.get())
                 self.population.people[index].chromosome.set(new_chromosome)
 
     def cross(self, crossing: Callable, probability=0.8):
         pass
+
+    def selection(self, select_method: Callable, percentage: float, descending=False):
+        return select_method(self.population, percentage, descending)
