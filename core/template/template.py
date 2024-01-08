@@ -14,12 +14,12 @@ class Chromosome:
     def __init__(self, chromosome_info: ChromosomeInfo) -> None:
         self.__end = chromosome_info.end
         self.__start = chromosome_info.start
-        self.__precision = chromosome_info.precision
+        self.__precision = np.int64(chromosome_info.precision)
         self.m = np.ceil(
             np.log2((self.__end - self.__start) * np.power(10, self.__precision))
             + np.log2(1)
         )
-        self.m = int(self.m)
+        self.m = np.int64(self.m)
         self.randoms = [np.random.randint(0, 2) for _ in range(int(self.m))]
         self.genome = "".join([str(bit) for bit in self.randoms])
 
@@ -47,10 +47,7 @@ class Person:
         self.chromosomes = (Chromosome(chromosome_info), Chromosome(chromosome_info))
         first_chromosome = self.chromosomes[0].to_number()
         second_chromosome = self.chromosomes[1].to_number()
-        self.value = np.round(
-            self.fitness_function([first_chromosome, second_chromosome]),
-            self.chromosomes[0].m + 1,
-        )
+        self.value = self.fitness_function([first_chromosome, second_chromosome])
 
     def __str__(self) -> str:
         return str(
@@ -61,9 +58,6 @@ class Person:
     def __repr__(self) -> str:
         return str(self)
 
-
-    def __repr__(self) -> str:
-        return str(self)
 
 
 class Population:
@@ -78,8 +72,9 @@ class Population:
             best_people.append(person)
         return best_people
 
-    def add_people(self, *people):
-        self.people += people
+    def add_people(self, people):
+        for person in people:
+            self.people.append(person)
 
     def remove_people(self, amount=1):
         for _ in range(amount):
@@ -100,15 +95,17 @@ class Population:
 class Experiment:
     def __init__(self, size: int, chromosome_info: ChromosomeInfo) -> None:
         self.population = Population(size, chromosome_info)
+        self.chromosome_info = chromosome_info
         self.best_people = []
 
-    def mutate(self, mutation: Callable, probability: float = 0.3):
+    def mutate(self, mutation: Callable, probability: float = 0.3, points : int = 1):
+        
         for index, person in enumerate(self.population.people):
             chance = np.random.rand()
-
+            
             if chance <= probability:
-                new_chromosome_1 = mutation(person.chromosomes[0])
-                new_chromosome_2 = mutation(person.chromosomes[1])
+                new_chromosome_1 = mutation(person.chromosomes[0], points)
+                new_chromosome_2 = mutation(person.chromosomes[1], points)
 
                 self.population.people[index].chromosomes[0].set(new_chromosome_1)
                 self.population.people[index].chromosomes[0].set(new_chromosome_2)
@@ -124,8 +121,36 @@ class Experiment:
                 self.population.people[index].chromosomes[0].set(new_chromosome_1)
                 self.population.people[index].chromosomes[0].set(new_chromosome_2)
 
-    def cross(self, crossing: Callable, probability=0.8):
-        pass
+    def cross(self, crossing: Callable,  probability : float = 0.8):
+        population_len = len(self.population.people)
+        target_population = population_len - len(self.best_people)
+        crossing_len = len(self.people_for_crossing)
+        counter = 0
+        
+        while counter < target_population:
+            chance = np.random.rand()
+            index_1 = np.random.randint(0, crossing_len)
+            index_2 = np.random.randint(0, crossing_len)
+            
+            if chance <= probability:
+                chromosome_1_x = self.people_for_crossing[index_1].chromosomes[0].get()
+                chromosome_1_y = self.people_for_crossing[index_1].chromosomes[1].get()
+
+                chromosome_2_x = self.people_for_crossing[index_2].chromosomes[0].get()
+                chromosome_2_y = self.people_for_crossing[index_2].chromosomes[1].get()
+                
+                new_chromosomes_x = crossing(chromosome_1_x, chromosome_2_x)
+                new_chromosomes_y = crossing(chromosome_1_y, chromosome_2_y)
+                
+                self.population.people[counter].chromosomes[0].set(new_chromosomes_x[0])
+                self.population.people[counter].chromosomes[0].set(new_chromosomes_y[0])
+                counter += 1
+                
+                self.population.people[counter].chromosomes[1].set(new_chromosomes_x[1])
+                self.population.people[counter].chromosomes[1].set(new_chromosomes_y[1])
+                counter += 1
+        self.population.people = self.population.people[:target_population]
+        self.population.add_people(self.best_people)
 
     def selection(
         self,
@@ -135,14 +160,14 @@ class Experiment:
         **kwargs
     ):
         if "contestants" in kwargs:
-            self.population_for_generation = select_method(
+            self.people_for_crossing = select_method(
                 self.population,
                 amount=amount,
                 maximization=maximization,
                 number_of_contestants=kwargs["contestants"],
             )
         else:
-            self.population_for_generation = select_method(
+            self.people_for_crossing = select_method(
                 self.population, amount=amount, maximization=maximization
             )
 

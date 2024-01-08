@@ -13,16 +13,15 @@ def best_selection(
 
 def tournament_selection(
     population: Population,
-    tournaments: int,
-    amount_of_contestants: int,
+    amount: int,
+    number_of_contestants: int,
     maximization=False,
 ) -> list[Person]:
     sample = []
-    for _ in range(tournaments):
+    for _ in range(amount):
         tournament = list(
-            np.random.choice(population.people, amount_of_contestants, replace=False)
+            np.random.choice(population.people, number_of_contestants, replace=False)
         )
-        print(tournament)
         if maximization:
             best_contestant = max(tournament, key=lambda person: person.value)
         else:

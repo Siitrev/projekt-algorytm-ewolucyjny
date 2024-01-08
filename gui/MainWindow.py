@@ -11,6 +11,8 @@ from PyQt6.QtWidgets import (
 )
 from core.template.template import *
 from core.strategies.strategies import *
+from core.crossings.crossing import *
+from core.inversion.inversion import *
 from core.mutations.mutation import mutation
 import time
 
@@ -23,7 +25,7 @@ class MainWindow(QMainWindow):
         self.setFixedWidth(350)
 
         layout = QVBoxLayout()
-        # Set table properties
+
         self.begin_txt = QLineEdit(placeholderText="Begin of the range - a")
         self.end_txt = QLineEdit(placeholderText="End of the range - b")
 
@@ -74,7 +76,18 @@ class MainWindow(QMainWindow):
 
         btn_confirm = QPushButton("Confirm")
         btn_confirm.pressed.connect(self.calculate_result)
-
+        
+        self.begin_txt.setText("0")
+        self.end_txt.setText("3.141592653589793")
+        self.population_amount_txt.setText("1000")
+        self.epoch_amount_txt.setText("100")
+        self.precision_txt.setText("10")
+        self.chromosome_amount_txt.setText("25")
+        self.elite_strategy_amount_txt.setText("3")
+        self.crossing_probability_txt.setText("0.8")
+        self.mutation_probability_txt.setText("0.3")
+        self.inversion_probability_txt.setText("0.1")
+        
         layout.addWidget(self.begin_txt)
         layout.addWidget(self.end_txt)
         layout.addWidget(self.population_amount_txt)
@@ -105,27 +118,51 @@ class MainWindow(QMainWindow):
             self.amount_of_contestanst_txt.setVisible(1)
 
     def calculate_result(self):
-        begin = int(self.begin_txt)
-        end = int(self.end_txt)
-        precision = int(self.precision_txt)
-        size_of_population = int(self.population_amount_txt)
-        epochs = int(self.epoch_amount_txt)
-        amount_of_best = int(self.elite_strategy_amount_txt)
+        begin = float(self.begin_txt.text())
+        end = float(self.end_txt.text())
+        precision = int(self.precision_txt.text())
+        size_of_population = int(self.population_amount_txt.text())
+        selection_amount = int(self.chromosome_amount_txt.text())
+        epochs = int(self.epoch_amount_txt.text())
+        amount_of_best = int(self.elite_strategy_amount_txt.text())
         maximization = self.maximization_checkbox.isChecked()
-
-        cross_probability = float(self.crossing_probability_txt)
-        mutation_probability = float(self.mutation_probability_txt)
-        inversion_probability = float(self.inversion_probability_txt)
+        
+        cross_probability = float(self.crossing_probability_txt.text())
+        mutation_probability = float(self.mutation_probability_txt.text())
+        inversion_probability = float(self.inversion_probability_txt.text())
 
         info = ChromosomeInfo(begin, end, precision)
         experiment = Experiment(size_of_population, info)
         start = time.process_time()
 
+        match self.crossing_method_combo.currentIndex():
+            case 0:
+                cross_function = crossing
+        
+        tournament = False
+        
+        match self.selection_method_combo.currentIndex():
+            case 0:
+                select_method = best_selection
+            case 1:
+                select_method = tournament_selection
+                contestants = int(self.amount_of_contestanst_txt.text())
+                tournament = True
+            case 2:
+                select_method = roulette_wheel
+        
+        mutation_points = self.mutation_method_combo.currentIndex() + 1
+        
         for _ in range(epochs):
             experiment.save_best_people(amount_of_best, maximization)
-            experiment.cross()
-            experiment.mutate(mutation, mutation_probability)
-            experiment.inverse()
+            if tournament:
+                experiment.selection(select_method,selection_amount,maximization, contestants=contestants)
+            else:
+                experiment.selection(select_method,selection_amount,maximization)
+            experiment.cross(cross_function, cross_probability)
+            experiment.mutate(mutation, mutation_probability, mutation_points)
+            experiment.inverse(inversion, inversion_probability)
+            experiment.best_people = []
 
         stop = time.process_time()
         result = experiment.get_result(maximization)
