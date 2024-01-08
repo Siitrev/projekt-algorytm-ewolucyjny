@@ -1,5 +1,6 @@
 from core.template.template import *
 from core.strategies.strategies import Strategy
+from core.mutations.mutation import mutation
 from gui.MainWindow import MainWindow
 from PyQt6.QtWidgets import QApplication
 import benchmark_functions as bf
@@ -9,10 +10,15 @@ fitness_function = bf.Michalewicz()
 
 info = ChromosomeInfo(-30, 30, 6)
 pop = Population(10, info)
-print(pop, "\n")
-strategies = Strategy()
-sample = strategies.roulette_wheel(pop,5)
-print(str(sample).replace("),",")\n"))
+# print(pop, "\n")
+# strategies = Strategy()
+# sample = strategies.roulette_wheel(pop,5)
+# print(str(sample).replace("),",")\n"))
+old = pop.people[0].chromosomes[0]
+new = mutation(pop.people[0].chromosomes[0], 2)
+
+print(old.genome.count("1"), old.genome.count("0"))
+print(new.count("1"), new.count("0"))
 
 # if __name__ == "__main__":
 #     app = QApplication(sys.argv)

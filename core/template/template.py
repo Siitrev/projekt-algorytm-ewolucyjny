@@ -35,6 +35,9 @@ class Chromosome:
 
     def get(self) -> str:
         return self.genome
+    
+    def __str__(self) -> str:
+        return self.genome
 
 
 class Person:
