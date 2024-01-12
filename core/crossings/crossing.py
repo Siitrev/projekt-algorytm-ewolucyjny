@@ -15,15 +15,12 @@ def twoPointCrossing(genome1 : str, genome2: str):
     random_point =  np.random.randint(0, len(genome1))
     random_point2 = np.random.randint(random_point+1, len(genome1)+1)
 
-    print("rp1: " + str(random_point) + ", rp2: " + str(random_point2))
-
     new_genome1 = genome1[:random_point] + genome2[random_point:random_point2] + \
     genome1[random_point2:]
 
     new_genome2 = genome2[:random_point] + genome1[random_point:random_point2] + \
     genome2[random_point2:]
 
-    print(new_genome1 + " " + new_genome2)
     return (new_genome1, new_genome2)
     
 
