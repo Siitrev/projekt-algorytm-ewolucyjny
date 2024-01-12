@@ -14,16 +14,18 @@ from core.strategies.strategies import *
 from core.crossings.crossing import *
 from core.inversion.inversion import *
 from core.mutations.mutation import mutation
+from database.DbController import DbController
 import time
 
 
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
+        self.database = DbController()
         self.setWindowTitle("Genetic algorithm for Michalewicz function")
         self.setFixedHeight(600)
         self.setFixedWidth(350)
-
+        np.set_printoptions(suppress = True)
         layout = QVBoxLayout()
 
         self.begin_txt = QLineEdit(placeholderText="Begin of the range - a")
@@ -133,11 +135,20 @@ class MainWindow(QMainWindow):
 
         info = ChromosomeInfo(begin, end, precision)
         experiment = Experiment(size_of_population, info)
-        start = time.process_time()
+        
 
+        homogeneous = False
         match self.crossing_method_combo.currentIndex():
             case 0:
-                cross_function = crossing
+                cross_function = onePointCrossing
+            case 1:
+                cross_function = twoPointCrossing
+            case 2:
+                cross_function = onePointCrossing
+            case 3:
+                cross_function = homogeneousCrossing
+                homogeneous = True
+            
         
         tournament = False
         
@@ -153,18 +164,28 @@ class MainWindow(QMainWindow):
         
         mutation_points = self.mutation_method_combo.currentIndex() + 1
         
+        self.database.clear_data()
+        start = time.process_time()
         for _ in range(epochs):
+            self.database.insert_values(*experiment.get_db_data(maximization))
             experiment.save_best_people(amount_of_best, maximization)
             if tournament:
                 experiment.selection(select_method,selection_amount,maximization, contestants=contestants)
             else:
                 experiment.selection(select_method,selection_amount,maximization)
-            experiment.cross(cross_function, cross_probability)
+            
+            if homogeneous:
+                experiment.cross(cross_function, cross_probability, homogeneous=homogeneous)
+            else:    
+                experiment.cross(cross_function, cross_probability)
             experiment.mutate(mutation, mutation_probability, mutation_points)
             experiment.inverse(inversion, inversion_probability)
-            experiment.best_people = []
+            experiment.population.add_people(experiment.best_people)
 
         stop = time.process_time()
+        
+        self.database.insert_values(*experiment.get_db_data(maximization))
+        
         result = experiment.get_result(maximization)
         point = (result.chromosomes[0].to_number(), result.chromosomes[1].to_number())
         success_info = QMessageBox()
