@@ -66,7 +66,6 @@ class MainWindow(QMainWindow):
         self.crossing_method_combo = QComboBox()
         self.crossing_method_combo.addItem("ONE_POINT")
         self.crossing_method_combo.addItem("TWO_POINTS")
-        self.crossing_method_combo.addItem("THREE_POINTS")
         self.crossing_method_combo.addItem("HOMO")
 
         mutation_method_label = QLabel("Mutation method:")
@@ -120,9 +119,9 @@ class MainWindow(QMainWindow):
             self.amount_of_contestanst_txt.setVisible(1)
 
     def calculate_result(self):
-        begin = float(self.begin_txt.text())
-        end = float(self.end_txt.text())
-        precision = int(self.precision_txt.text())
+        begin = np.float64(self.begin_txt.text())
+        end = np.float64(self.end_txt.text())
+        precision = np.uint64(self.precision_txt.text())
         size_of_population = int(self.population_amount_txt.text())
         selection_amount = int(self.chromosome_amount_txt.text())
         epochs = int(self.epoch_amount_txt.text())
@@ -144,8 +143,6 @@ class MainWindow(QMainWindow):
             case 1:
                 cross_function = twoPointCrossing
             case 2:
-                cross_function = onePointCrossing
-            case 3:
                 cross_function = homogeneousCrossing
                 homogeneous = True
             

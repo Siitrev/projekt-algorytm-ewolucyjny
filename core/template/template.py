@@ -4,7 +4,7 @@ import benchmark_functions as bf
 from copy import deepcopy 
 
 class ChromosomeInfo:
-    def __init__(self, start: float, end: float, precision: int) -> None:
+    def __init__(self, start: np.float64, end: np.float64, precision: np.uint64) -> None:
         self.start = start
         self.end = end
         self.precision = precision
@@ -12,9 +12,9 @@ class ChromosomeInfo:
 
 class Chromosome:
     def __init__(self, chromosome_info: ChromosomeInfo) -> None:
-        self.__end = chromosome_info.end
-        self.__start = chromosome_info.start
-        self.__precision = np.int64(chromosome_info.precision)
+        self.__end = np.float64(chromosome_info.end)
+        self.__start = np.float64(chromosome_info.start)
+        self.__precision = np.uint64(chromosome_info.precision)
         self.m = np.ceil(
             np.log2((self.__end - self.__start) * np.power(10, self.__precision))
             + np.log2(1)

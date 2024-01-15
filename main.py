@@ -4,7 +4,6 @@ from core.mutations.mutation import mutation
 
 from gui.MainWindow import MainWindow
 from PyQt6.QtWidgets import QApplication
-import benchmark_functions as bf
 import sys
 
 if __name__ == "__main__":
