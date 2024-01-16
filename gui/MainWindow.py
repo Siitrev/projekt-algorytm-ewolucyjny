@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QLabel,
     QMessageBox,
+    QProgressBar
 )
 from core.template.template import *
 from core.strategies.strategies import *
@@ -15,7 +16,7 @@ from core.crossings.crossing import *
 from core.inversion.inversion import *
 from core.mutations.mutation import mutation
 from database.DbController import DbController
-import time
+import time, asyncio
 
 
 class MainWindow(QMainWindow):
@@ -76,7 +77,10 @@ class MainWindow(QMainWindow):
         self.maximization_checkbox = QCheckBox("Maximization")
 
         btn_confirm = QPushButton("Confirm")
-        btn_confirm.pressed.connect(self.calculate_result)
+        btn_confirm.pressed.connect(self.simulate)
+        
+        self.progress_bar = QProgressBar(self)
+        self.progress_value = 0
         
         self.begin_txt.setText("0")
         self.end_txt.setText("3.141592653589793")
@@ -107,6 +111,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(mutation_method_label)
         layout.addWidget(self.mutation_method_combo)
         layout.addWidget(self.maximization_checkbox)
+        layout.addWidget(self.progress_bar)
         layout.addWidget(btn_confirm)
 
         widget = QWidget()
@@ -118,7 +123,18 @@ class MainWindow(QMainWindow):
         if ind == 1:
             self.amount_of_contestanst_txt.setVisible(1)
 
-    def calculate_result(self):
+    def reset(self):
+        self.progress_value = 0
+        self.progress_bar.reset()
+        
+    def update(self, value, max_value):
+        if self.progress_value + value >= max_value:
+            self.progress_bar.setValue(max_value)
+        else:
+            self.progress_value += value
+            self.progress_bar.setValue(self.progress_value)
+
+    async def calculate_result(self):
         begin = np.float64(self.begin_txt.text())
         end = np.float64(self.end_txt.text())
         precision = np.uint64(self.precision_txt.text())
@@ -135,6 +151,8 @@ class MainWindow(QMainWindow):
         info = ChromosomeInfo(begin, end, precision)
         experiment = Experiment(size_of_population, info)
         
+        self.progress_bar.setRange(0, epochs)
+        percent_value = epochs // 100
 
         homogeneous = False
         match self.crossing_method_combo.currentIndex():
@@ -163,7 +181,8 @@ class MainWindow(QMainWindow):
         
         self.database.clear_data()
         start = time.process_time()
-        for _ in range(epochs):
+        self.reset()
+        for current_epoch in range(epochs):
             self.database.insert_values(*experiment.get_db_data(maximization))
             experiment.save_best_people(amount_of_best, maximization)
             if tournament:
@@ -178,6 +197,8 @@ class MainWindow(QMainWindow):
             experiment.mutate(mutation, mutation_probability, mutation_points)
             experiment.inverse(inversion, inversion_probability)
             experiment.population.add_people(experiment.best_people)
+            if not current_epoch % percent_value: 
+                self.update(percent_value, epochs)
 
         stop = time.process_time()
         
@@ -190,3 +211,6 @@ class MainWindow(QMainWindow):
             f"Znaleziono rozwiązanie w {stop - start} sekund. Ma ono współrzedne {point} i wynosi {result.value}"
         )
         success_info.exec()
+        
+    def simulate(self):
+        asyncio.run(self.calculate_result())
