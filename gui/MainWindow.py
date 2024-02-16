@@ -16,6 +16,7 @@ from core.crossings.crossing import *
 from core.inversion.inversion import *
 from core.mutations.mutation import mutation
 from database.DbController import DbController
+from plots.plotting import plot_column
 import time, asyncio
 
 
@@ -203,6 +204,10 @@ class MainWindow(QMainWindow):
         stop = time.process_time()
         
         self.database.insert_values(*experiment.get_db_data(maximization))
+        
+        plot_column(self.database,1)
+        plot_column(self.database,2)
+        plot_column(self.database,3)
         
         result = experiment.get_result(maximization)
         point = (result.chromosomes[0].to_number(), result.chromosomes[1].to_number())
